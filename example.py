@@ -23,7 +23,7 @@ matplotlib.rc('font', **font)
 # Custom code starts here
 
 # some initial contants with their errors
-T_bs = np.array([30.0, 50.0, 80.0, 110.0]) + 273.15 # °K
+T_bs = np.array([80.0]) + 273.15 # °K
 P_1 = ufloat(200.0, 0.25*200.0) # Ohm
 R_1 = ufloat(1200.0, 120.0) # Ohm
 R_2 = ufloat(389*10**-3, 0.1*389*10**-3) # Ohm
@@ -53,10 +53,16 @@ for T_b in T_bs:
 
 	Temp = str(int(T_b-273.15)) # T in °C
 
-	# fetch the measured data from the csv file
-	V_S = hp.fetch('data/example_data_' + Temp + '.csv', 'V_Shunt [V]', 1.0*10**-3)
-	I_T = hp.fetch('data/example_data_' + Temp + '.csv', 'I_T [A]', deltaI_T)
-	V_p = hp.fetch('data/example_data_' + Temp + '.csv', 'V_p [V]', 1.0*10**-3)
+	if Temp == "80":
+		# fetch the measured data from the csv file
+		V_S = hp.fetch('data/example_data_' + Temp + '.xlsx', 'V_Shunt [V]', 1.0*10**-3)
+		I_T = hp.fetch('data/example_data_' + Temp + '.xlsx', 'I_T [A]', deltaI_T)
+		V_p = hp.fetch('data/example_data_' + Temp + '.xlsx', 'V_p [V]', 1.0*10**-3)
+	else:
+		# fetch the measured data from the csv file
+		V_S = hp.fetch('data/example_data_' + Temp + '.csv', 'V_Shunt [V]', 1.0*10**-3)
+		I_T = hp.fetch('data/example_data_' + Temp + '.csv', 'I_T [A]', deltaI_T)
+		V_p = hp.fetch('data/example_data_' + Temp + '.csv', 'V_p [V]', 1.0*10**-3)
 
 	# do some calculation
 	n = int(V_p.size/2) # n=4, half of the number of measurements

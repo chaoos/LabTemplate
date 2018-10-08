@@ -16,13 +16,18 @@ import os
 
 '''
     Fetch data from a csv file
-    @param {string} file        - csv file containing data
+    @param {string} file        - csv/excel file containing data
     @param {string} col         - column header name
     @param {float|array} err    - error of the data set 
     @return {numpy.ndarray}		- numpy array containing the data (and their errors if given)
 '''
-def fetch (file, col, err=0):
-	df = pd.read_csv(file)
+def fetch (file, col, err=0, sheet="Sheet1"):
+	ext = os.path.splitext(file)[1]
+	if ext == ".csv":
+		df = pd.read_csv(file)
+	elif ext == ".xlsx":
+		df = pd.read_excel(open(file,'rb'), sheetname=sheet)
+
 	if err == 0:
 		return np.array(df[col])
 	else:
