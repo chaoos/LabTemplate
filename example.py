@@ -22,8 +22,6 @@ matplotlib.rc('font', **font)
 
 # Custom code starts here
 
-print(type(unumpy.uarray([2], 0.1)))
-
 # some initial contants with their errors
 T_bs = np.array([30.0, 50.0, 80.0, 110.0]) + 273.15 # °K
 P_1 = ufloat(200.0, 0.25*200.0) # Ohm
@@ -100,6 +98,11 @@ for T_b in T_bs:
 	plt.errorbar(hp.nominal(I_mean), hp.nominal(deltaTplus + deltaTminus), xerr=hp.stddev(I_mean), yerr=hp.stddev(deltaTplus + deltaTminus), label=r'' + Temp + '°C')
 	plt.ylabel(r'$\Delta T^{+} + \Delta T^{-}$ [°K]')
 
+	# I - V_p
+	plt.figure(5)
+	plt.errorbar(hp.nominal(I), hp.nominal(V_p), xerr=hp.stddev(I), yerr=hp.stddev(V_p), label=r'' + Temp + '°C')
+	plt.ylabel(r'$V_p$ [V]')
+
 	# attributes of all plots
 	for i in [0, 1, 2, 3, 4, 5]:
 		plt.figure(i)
@@ -124,6 +127,8 @@ plt.savefig("plots/dTp-dTm_vs_I." + fmt)
 plt.figure(4)
 plt.savefig("plots/dTp+dTm_vs_I." + fmt)
 
+plt.figure(5)
+plt.savefig("plots/Vp_vs_I." + fmt)
 
 # replace the markers in main.tex with the formatted variables/fitlines/tables etc...
 hp.replace("EQ1", "f(x) = " + hp.fitline([2, 5], 1))

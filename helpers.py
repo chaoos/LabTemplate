@@ -11,7 +11,7 @@ from decimal import Decimal
 import pandas as pd
 from uncertainties import ufloat, unumpy
 from uncertainties.umath import *
-from subprocess import call
+from subprocess import call, Popen, PIPE
 import os
 
 '''
@@ -47,9 +47,22 @@ def equal (A, B, tol):
 	return True
 
 def compile (pdffile = "main", converter = "pdflatex"):
-	call([converter, '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=None, stderr=None)
-	os.remove(pdffile + ".aux")
-	os.rename(pdffile + ".log", "log/" + pdffile + ".log")
+	#call([converter, '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=None, stderr=None)
+	p = Popen([converter, '-halt-on-error', '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=PIPE, stderr=PIPE)
+	output, err = p.communicate(b"input data that is passed to subprocess' None")
+	rc = p.returncode
+
+	print(rc)
+	if rc != 0:
+		print("Compilation of main.tex failed:")
+		print(output)
+	else:
+		p = Popen(['evince', pdffile + '.pdf'], stdin=None, stdout=None, stderr=None)
+		p.communicate(b"Opening pdf")
+		os.remove(pdffile + ".aux")
+		os.rename(pdffile + ".log", "log/" + pdffile + ".log")
+
+
 
 '''
     Format a number (with its error if given) in latex
