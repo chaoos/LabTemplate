@@ -19,8 +19,8 @@
  right=30mm,
  top=20mm,
  }
-\author{Surname Lastname}
-\title{Report - Experiment Name}
+\author{[[Name]]}
+\title{Report - [[Experiment]]}
 
 \begin{document}
 
@@ -43,26 +43,30 @@ Setup
 \label{fig:text}
 \end{figure}
 
+\section{Measurement Method}
+
+Since the Peltier coefficient is proportional to the electric current density $\vec{J}$, we cannot measure it directly. It must be calculated out of measurable quantities.
+
 \section{Measurements}
-The measured value of variable1 is [[variable1]].
+The measured value of variable1 is $[[variable1]]$.
 \newline
-The measured value of variable2 is [[variable2]].
+The measured value of variable2 is $[[variable2]]$.
 \newline
-The measured value of variable3 is [[variable3]].
+The measured value of variable3 is $[[variable3]]$.
 \newline
-The measured value of variable4 is [[variable4]].
+The measured value of variable4 is $[[variable4]]$.
 \newline
-The measured value of variable5 is [[variable5]].
+The measured value of variable5 is $[[variable5]]$.
 \newline
-The measured value of variable6 is [[variable6]].
+The measured value of variable6 is $[[variable6]]$.
 \newline
-The measured value of variable7 is [[variable7]].
+The measured value of variable7 is $[[variable7]]$.
 \newline
-The measured value of variable8 is [[variable8]].
+The measured value of variable8 is $[[variable8]]$.
 \newline
-The measured value of variable9 is [[variable9]].
+The measured value of variable9 is $[[variable9]]$.
 \newline
-The measured value of variable10 is [[variable10]].
+The measured value of variable10 is $[[variable10]]$.
 \newline
 The polyfit of bla bla grade 1 is $[[polyfit1]]$.
 \newline
@@ -72,21 +76,53 @@ The polyfit of bla bla grade 4 is $[[polyfit3]]$.
 \newline
 The polyfit of bla bla is $[[polyfit4]]$.
 \newline
+
+\subsection{Errors}
+
+The error of $I_T$ was chosen to be the change in the measured value of $I_T$ of one section in the scale of the galvanometer. When the system was in equilibrium and the potentiometer was adjusted to the zero, the value of $I_T$ was measured to be $a$. Then we changed the potentiometer until the pointer of the galvanometer was one line to the right. After that, $I_T$ was measured to be $b$. The error of $I_T$ was then calculated to be $\Delta I_T = |a-b|$. That final value of $I_T$ is $\Delta I_T = [[deltaI_T]] A$.
+\newline
+For the measurement of $V_{Shunt}$ and $V_p$ the same
+
 \section{Discussion}
 Discussion
-Example of a table:
+
+\section{Appendix}
 
 \begin{table}[H]
 \centering
-\begin{tabular}{r|rrrrrr}
+\begin{tabular}{r|rrr}
 \hline
-[[table]]
+[[table30]]
 \end{tabular}
-\caption{Caption of the table.}
+\caption{Measured data for $T=30^\circ\text{C}$.}
 \end{table}
 
-\section{Appendix}
-Appendix
+\begin{table}[H]
+\centering
+\begin{tabular}{r|rrr}
+\hline
+[[table50]]
+\end{tabular}
+\caption{Measured data for $T=50^\circ\text{C}$.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{r|rrr}
+\hline
+[[table80]]
+\end{tabular}
+\caption{Measured data for $T=80^\circ\text{C}$.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{r|rrr}
+\hline
+[[table110]]
+\end{tabular}
+\caption{Measured data for $T=110^\circ\text{C}$.}
+\end{table}
 
 \end{document}
 

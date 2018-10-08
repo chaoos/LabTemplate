@@ -39,6 +39,7 @@ k_1 = lambda T: np.polyval(np.polyfit([250.0, 400.0], [401.0, 391.0], 1), T) # W
 k_2 = lambda T: np.polyval(np.polyfit([275.0, 400.0], [21.9, 26.6], 1), T) # W/mK
 F_1 = np.pi*(0.5*d_1)**2# m^2
 F_2 = np.pi*(0.5*d_2)**2# m^2
+deltaI_T = 8.5*10**-6
 
 # linear polyfit of the reference table of the type k thermocouple
 C = np.arange(-10, 21, 1) # °C
@@ -54,7 +55,7 @@ for T_b in T_bs:
 
 	# fetch the measured data from the csv file
 	V_S = hp.fetch('data/example_data_' + Temp + '.csv', 'V_Shunt [V]', 1.0*10**-3)
-	I_T = hp.fetch('data/example_data_' + Temp + '.csv', 'I_T [A]', 0.1*10**-6)
+	I_T = hp.fetch('data/example_data_' + Temp + '.csv', 'I_T [A]', deltaI_T)
 	V_p = hp.fetch('data/example_data_' + Temp + '.csv', 'V_p [V]', 1.0*10**-3)
 
 	# do some calculation
@@ -110,8 +111,15 @@ for T_b in T_bs:
 		plt.grid(True)
 		plt.xlabel(r'$I$ [A]')
 
+	V_S = np.concatenate((np.array([r"$V_{Shunt} [mV]$"]), V_S*10**3))
+	I_T = np.concatenate((np.array([r"$I_T [micro A]$"]), I_T*10**6))
+	V_p = np.concatenate((np.array([r"$V_p [mV]$"]), V_p*10**3))
+	I   = np.concatenate((np.array([r"$I [A]$"]), I))
+	arr = np.array([I, V_S, I_T, V_p]).T
+	hp.replace("table"+Temp, arr)
+
 # save the plots im format .fmt
-fmt = "eps"
+fmt = "png"
 plt.figure(0)
 plt.savefig("plots/Pi12V_vs_I." + fmt)
 
@@ -146,15 +154,9 @@ hp.replace("polyfit1", "f(x) = " + hp.fitline(coeffs, 1))
 hp.replace("polyfit2", hp.fitline(coeffs, 2))
 hp.replace("polyfit3", hp.fitline(coeffs, 4))
 hp.replace("polyfit4", hp.fitline(coeffs))
-
-
-V_S = np.concatenate((np.array([r"$V_{Shunt} [V]$"]), hp.fetch('data/example_data_80.csv', 'V_Shunt [V]', 1.0*10**-3)))
-I_T = np.concatenate((np.array([r"$I_T [A]$"]), hp.fetch('data/example_data_80.csv', 'I_T [A]', 0.1*10**-6)))
-V_p = np.concatenate((np.array([r"$V_p [V]$"]), hp.fetch('data/example_data_80.csv', 'V_p [V]', 1.0*10**-3)))
-I   = np.concatenate((np.array([r"$I ~ [A]$"]), hp.fetch('data/example_data_80.csv', 'I ~ [A]')))
-arr = np.array([I, V_S, I_T, V_p]).T
-
-hp.replace("table", arr)
+hp.replace("Name", "Roman Gruber")
+hp.replace("Experiment", "Peltier Effect")
+hp.replace("deltaI_T", deltaI_T)
 
 hp.compile()
 

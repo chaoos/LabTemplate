@@ -49,10 +49,9 @@ def equal (A, B, tol):
 def compile (pdffile = "main", converter = "pdflatex"):
 	#call([converter, '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=None, stderr=None)
 	p = Popen([converter, '-halt-on-error', '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=PIPE, stderr=PIPE)
-	output, err = p.communicate(b"input data that is passed to subprocess' None")
+	output, err = p.communicate(b"input data that is passed to subprocess' stdin")
 	rc = p.returncode
 
-	print(rc)
 	if rc != 0:
 		print("Compilation of main.tex failed:")
 		print(output)
@@ -111,14 +110,12 @@ def fmt_number (nr, sign = '.2f'):
 
 	return s
 
-def fmt_table (m, fmt=True):
+def fmt_table (m):
+	#m = format(np.atleast_2d(m)) if fmt else np.atleast_2d(m)
 	m = np.atleast_2d(m)
 	t = []
 	for i, v in enumerate(m):
-		if fmt:
-			t.append(' & '.join(format(x) for x in v))
-		else:
-			t.append(' & '.join(str(x) for x in v))
+		t.append(' & '.join(str(x) for x in v))
 	
 	tbl = ''
 	tbl += t[0] + '\\\\\n\\hline\n\hline\n'
@@ -126,15 +123,35 @@ def fmt_table (m, fmt=True):
 	tbl += '\\\\\n'.join(str(x) for x in t)
 	return tbl
 
-def format(s, fmt=True):
+def format(s, fmt=False):
 	if isinstance(s, str): # it is a string
 		return s
+
 	elif hasattr(s, "__len__"): # it is an array
-		return fmt_table(s, fmt)		
+		s = np.atleast_2d(s)
+		for i, a in enumerate(s):
+			for j, b in enumerate(a):
+				s[i][j] = format(b, True)
+		return fmt_table(s)		
 	elif (hasattr(s, 'n')): # it has uncertainties
-		return "$" + fmt_number(s) + "$" if fmt else str(s)
+		return "$" + fmt_number(s) + "$" if fmt else fmt_number(s)
+	elif isinstance(s, int) or isinstance(s, float):
+		return "$" + fmt_number(s) + "$" if fmt else fmt_number(s)
 	else: # it is a regular number (float, int)
-		return "$" + fmt_number(s) + "$" if fmt else str(s)
+		return str(s)
+
+'''
+def format(el, fmt=True):
+	print(el)
+	if isinstance(el, list):
+		exit()
+		for i, a in enumerate(el):
+			for j, b in enumerate(el[i]):
+				el[i][j] = format_one(a, fmt)
+		return el
+	else:
+		return format_one(el, fmt)
+'''
 
 def fitline(C, deg=None):
 	if (deg == None):
@@ -155,7 +172,7 @@ def fitline(C, deg=None):
 
 
 first = True
-def replace(s, r, fmt=True, texfile = "main.tex"):
+def replace(s, r, fmt=False, texfile = "main.tex"):
 	global first
 	if first:
 		file = texfile
