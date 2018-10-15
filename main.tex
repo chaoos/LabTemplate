@@ -6,11 +6,14 @@
 \usepackage{gensymb}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage[thmmarks,amsmath]{ntheorem}
 \usepackage{booktabs,siunitx}
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage{geometry}
 \usepackage{float}
+\usepackage{hyperref}
+\usepackage{caption}
 \usepackage[bottom]{footmisc}
 \geometry{
  a4paper,
@@ -24,28 +27,86 @@
 
 \begin{document}
 
+% section hkdhgkjh (end)
+
 \maketitle
 \abstract 
 Abstact
 \section{Introduction}
-Example Equation:
+
+The Peltier effect is the phenomenon of heat generation or cooling of at the junction of two metal conductors when a current is applied trough a circuit. The far ends of these conductors must be held at a constant temperature. Depending on the sign of the applied current, the junction warms up or cools down (relative to the temperature of the metals). Since the two metals are not the same, at the junction there is a discontinuity in heat flow $\vec{U}$, because the current must be continuous. The jump in the discontinuity is proportional to the current density and the Peltier coefficient.
+\newline
+There is also an amount of heating with is not negligible due to another (well known) effect called Joule heating. This is, when current is applied to a metal conductor, the material dissipates heat, although this effect does not depend on the sign of the current, because it is proportional to the square of the current density $Q_{Joule} \propto \rho \vec{J}^2$.
+
+\begin{subequations}
 \begin{align}
+    E &= ... \	\label{eq:E} \\
+    U &= ... \	\label{eq:U}
+\end{align}
+\end{subequations}
+
+Local conservation of heat [[TODO: ?!?!?]]:
+
+\begin{subequations}
+\begin{align}
+    \frac{du}{dt} 	&= - \nabla \cdot \vec{U} + \vec{J} \cdot \vec{E}
+\end{align}
+\end{subequations}
+
+Setting $\frac{du}{dt} = 0$ in the steady state, one accuires:
+
+\begin{subequations}
+\begin{align}
+	\nabla \cdot \vec{U} &= \vec{J} \cdot \vec{E} \\
+	\nabla \cdot \left( \Pi \vec{J} - \kappa \nabla T \right) &= \vec{J} \cdot \left( \rho \vec{J} + \epsilon \nabla T \right) \ \label{eq:3b} \\
+	\nabla \cdot \left( \epsilon T \vec{J} - \kappa \nabla T \right) &= \vec{J} \cdot \left( \rho \vec{J} + \epsilon \nabla T \right) \ \label{eq:3c} \\
+	\epsilon T \nabla \vec{J} + \epsilon \left( \nabla T \right) \vec{J} - \kappa \Delta T &= \rho \vec{J}^2 + \epsilon \vec{J} \nabla T \\
+	\epsilon T \nabla \vec{J} - \kappa \Delta T &= \rho \vec{J}^2 \\
+	\kappa \Delta T &= - \rho \vec{J}^2 \ \label{eq:jsquare}
+\end{align}
+\end{subequations}
+
+Euqation \eqref{eq:3b} is obtained after inserting equations \eqref{eq:E} and \eqref{eq:U}. For \eqref{eq:3c} the Onsager relation $\Pi = \epsilon T$ was used. At equilirium the current density $\vec{J}$ is constant in the metal conductor, therefore $\nabla \vec{J} = 0$ and we obtain equation \eqref{eq:jsquare} where we see that Joule heating is proportional to the current density squared, thus depends not on the direction of the current.
+
+\section{Setup}
+Example Equation:
+\begin{equation}
 [[EQ1]]
 \label{eq:Example Equation}
-\end{align}
-\section{Setup}
-Setup
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=1.0\textwidth]{plots/dT_vs_I.eps}
-\caption{Plot of [[TODO]] against the time. Source: Authors' own.}
-\label{fig:text}
-\end{figure}
-
+\end{equation}
 \section{Measurement Method}
 
-Since the Peltier coefficient is proportional to the electric current density $\vec{J}$, we cannot measure it directly. It must be calculated out of measurable quantities.
+Since the Peltier coefficient is proportional to the difference in voltage of the two metals and inverse proportional to the electric current density $\vec{J}$, we cannot measure it directly. It must be calculated from of measurable quantities.
+\newline
+The voltage difference between the junction of the two metals and the oil bath $V_T$ can be measured with a type-K thermocouple. From this with the usage of its reference table [[TODO: refernz aus dem Netz]] we obtain the difference in temperature $\Delta T = T_{b} - T_J$ where $T_b$ is the temperature of the oil bath and $T_J$ the temperature at the junction of the two metals.
+\newline
+The voltage difference between the upper and the lower end of the Peltier element $V_p$ can be measured too.
+\newline
+With those 3 values ($V_T$, $V_p$ and $I$), we can calculate the Peltier coefficient according to the theory in 2 ways (equations \eqref{eq:p12i} and \eqref{eq:p12v}).
+
+\subsection{Measuring $I$}
+
+For the measurement of the incoming current $I$ a shunt resistor was used because the device supplying the current was not reliable in regulating and reading off the current precisely. The voltage over the shunt was measured as $V_S$ with a multimeter connected over the shunt. With that value, the real current was calculated using the properties of the shunt itself ($I_{Shunt} = [[I_Shunt]]\, A$ and $V_{Shunt} = [[V_Shunt]]\, mV$) with the URI-formula:
+
+\begin{equation}
+I = \frac{V_S}{R_{Shunt}} = \frac{V_S \cdot I_{Shunt}}{V_{Shunt}}
+\label{eq:current}
+\end{equation}
+
+\subsection{Measuring $V_T$}
+
+Since $V_T$ is in the regime of $\mu V$, we needed a compensation circuit to measure it. In this circuit the value of $I_T$ is measured with a multimeter. Usually the value of $I_T$ is in the regime of $\mu A$. With $I_T$ given, $V_T$ can be calculated using
+
+\begin{equation}
+V_T = R_2 \cdot I_T
+\label{eq:V_T}
+\end{equation}
+
+The value of $R_2$ in the compensation circuit was given in the instruction sheet as $R_2 = [[R_2]]\, m\Omega$.
+
+\subsection{Measuring $V_p$}
+
+The measurement of $V_p$ was straightforward. A multimeter was connected to the corresponding connectors (7, 8) [[TODO: image of connections]] given in the experiment installation. These two connectors lead to the upper and the lower end of the Peltier element.
 
 \section{Measurements}
 The measured value of variable1 is $[[variable1]]$.
@@ -79,18 +140,89 @@ The polyfit of bla bla is $[[polyfit4]]$.
 
 \subsection{Errors}
 
-The error of $I_T$ was chosen to be the change in the measured value of $I_T$ of one section in the scale of the galvanometer. When the system was in equilibrium and the potentiometer was adjusted to the zero, the value of $I_T$ was measured to be $a$. Then we changed the potentiometer until the pointer of the galvanometer was one line to the right. After that, $I_T$ was measured to be $b$. The error of $I_T$ was then calculated to be $\Delta I_T = |a-b|$. That final value of $I_T$ is $\Delta I_T = [[deltaI_T]] A$.
+The error of $I_T$ was a bit complicate to estimate. It was chosen to be the change in the measured value of $I_T$ of one section in the scale of the galvanometer [[TODO: Bild der skala vom galv-meter hier]]. When the system was in equilibrium and the potentiometer was adjusted, such that the the galvanometer displayed zero, the value of $I_T$ was measured to be $a$. Then we adjusted the potentiometer until the pointer of the galvanometer was one line to the right. After that, $I_T$ was measured to be $b$. The error of $I_T$ was then calculated to be $\Delta I_T = |a-b|$. That final value of $I_T$ is $\Delta I_T = [[deltaI_T]] A$.
 \newline
-For the measurement of $V_{Shunt}$ and $V_p$ the same
+For the measurement of $V_{Shunt}$ and $V_p$ the same type of multimeter was used [[TODO:referenz fehlt]]. In the manual the error was declared as [[deltaV]].
+\newline
+To calculate the current $I$ from equation \eqref{eq:current}, no error estimations for $V_{Shunt}$ and $I_{Shunt}$ were given on the instruction sheet. Therefore these two values were supposed to be exact and thus don't provide input to the error propagation.
+
 
 \section{Discussion}
-Discussion
+TODO: dT+ - dT- against I should be linear function going trough (0,0), plots here with linear fit lines...
+\newline
+TODO: $V_p$ against I should be linear + polyfit here
+
+\subsection{Systematic error sources}
+
+\begin{itemize}
+\item Oil leaking in the Peltier element
+\item Reference temperature source assumed to be exact $0^{\circ}C$, leads to errors in the $\Delta T^{\pm}$
+\item Batteries in the compensation circuit were not exactly $1.5 V$
+\item Resistances in the cables not considered
+\item Waiting for convergence of the currrent trough the compensation circuit, lead to small oscillations around a value which was taken as measurement.
+\item Temperature gradient in the oil bath
+\item Approximations in the theory
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{plots/dT_vs_I.eps}
+\caption{Plot of $\Delta T^{\pm}$ against $I$. Source: Authors' own.}
+\label{fig:text}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{plots/Pi12I_vs_I.eps}
+\caption{Plot of $\Pi_{12}^{(I)}$ against $I$. Source: Authors' own.}
+\label{fig:text}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{plots/Pi12V_vs_I.eps}
+\caption{Plot of $\Pi_{12}^{(V)}$ against $I$. Source: Authors' own.}
+\label{fig:text}
+\end{figure}
+
+\begin{figure}[H]
+\captionsetup{singlelinecheck=off}
+\centering
+\includegraphics[width=1.0\textwidth]{plots/dTp-dTm_vs_I.eps}
+\caption[blubb]{Plot of $\Delta T^{+} - \Delta T^{m}$ against $I$ with their best-fit lines of the measurements. These are as follows:
+\begin{itemize}
+\item $f_{30^{\circ}C}(I) = [[bestfit30]]$
+\item $f_{50^{\circ}C}(I) = [[bestfit50]]$
+\item $f_{80^{\circ}C}(I) = [[bestfit80]]$
+\item $f_{110^{\circ}C}(I) = [[bestfit110]]$
+\end{itemize}Source: Authors' own.}
+\label{fig:linearindt}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{plots/dTp+dTm_vs_I.eps}
+\caption{Plot of $\Delta T^{+} + \Delta T^{m}$ against $I$. Source: Authors' own.}
+\label{fig:text}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1.0\textwidth]{plots/Vp_vs_I.eps}
+\caption{Plot of $V_p$ against $I$. Source: Authors' own.}
+\label{fig:text}
+\end{figure}
+
+\subsection{Conclusion}
 
 \section{Appendix}
 
+All measured data can be found underneath.
+\newline
+
 \begin{table}[H]
 \centering
-\begin{tabular}{r|rrr}
+\begin{tabular}{r|rrrr}
 \hline
 [[table30]]
 \end{tabular}
@@ -99,7 +231,7 @@ Discussion
 
 \begin{table}[H]
 \centering
-\begin{tabular}{r|rrr}
+\begin{tabular}{r|rrrr}
 \hline
 [[table50]]
 \end{tabular}
@@ -108,7 +240,7 @@ Discussion
 
 \begin{table}[H]
 \centering
-\begin{tabular}{r|rrr}
+\begin{tabular}{r|rrrr}
 \hline
 [[table80]]
 \end{tabular}
@@ -117,7 +249,7 @@ Discussion
 
 \begin{table}[H]
 \centering
-\begin{tabular}{r|rrr}
+\begin{tabular}{r|rrrr}
 \hline
 [[table110]]
 \end{tabular}
