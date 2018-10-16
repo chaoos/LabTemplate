@@ -195,11 +195,16 @@ def pharray(nom, errs, sfs, sfss=None, tags=None, sfpms=None):
 		(nom, errs, sfs, sfss, tags, sfpms))
 
 def sf(nr):
-	a = str(nr)
-	a = re.sub('[eE]+.*$', '', a)
-	a = re.sub('[-\.,]', '', a)
-	a = re.sub('^[0]+', '', a)
-	return int(len(a))
+	if re.match(r'0\.[0]+', str(nr)):
+		return int(len(str(nr)) - 1)
+	elif str(nr) == "0":
+		return 1
+	else:
+		a = str(nr)
+		a = re.sub('[eE]+.*$', '', a)
+		a = re.sub('[-\.,]', '', a)
+		a = re.sub('^[0]+', '', a)
+		return int(len(a))
 
 def sf_ac(nr):
 	if '.' in str(nr):
@@ -250,7 +255,7 @@ def fetch2 (file, col, err = 0, sheet = "Sheet1"):
 	elif ext == ".xlsx":
 		df = pd.read_excel(open(file,'rb'), sheetname=sheet, converters={col: parse})
 
-	if err == 0:
+	if not hasattr(err, "__len__") and err == 0:
 		return np.array(df[col]).astype(float)
 	else:
 		earr = np.zeros(df[col].size) + err
@@ -335,6 +340,8 @@ def equal (A, B, tol):
 
 def compile (pdffile = "main", converter = "pdflatex"):
 	#call([converter, '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=None, stderr=None)
+	if not os.path.exists('log'):
+		os.makedirs('log')
 	p = Popen([converter, '-halt-on-error', '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=PIPE, stderr=PIPE)
 	output, err = p.communicate()
 	rc = p.returncode
@@ -360,7 +367,9 @@ def fmt_number (nr, sign = None):
 
 	sign_default = 3
 	s = "NaN"
-	if (np.abs(nr) > 9999 or np.abs(nr) < 0.1) and nr != 0:
+
+	n = nr.n if hasattr(nr, 'n') else nr
+	if (np.abs(n) > 9999 or np.abs(n) < 0.01) and n != 0:
 		if hasattr(nr, 'n'):
 			sf = sign if isinstance(sign, int) else sig_figures2(nr)
 			float_str = to_precision(nr.n, sf, True)
@@ -377,6 +386,9 @@ def fmt_number (nr, sign = None):
 			elif (r"{0:." + ac + r"f}").format(err) == fmtNull:
 				s = (r"{0} \times 10^{{{1}}} \pm {2}").format(base, exponent, fmt_number(nr.s, sf))
 			else:
+				# correction of the sig. figures of the error if the error and the nominal
+				# value of very close to each other
+				sign_err = sign_err + 1 if np.abs(err - float(base)) < 9 else sign_err
 				s = (r"\left( {0} \pm {1:." + ac + r"f} \right) \times 10^{{{2}}}").format(base, float(to_precision(err, sign_err, False)), exponent)
 
 		else:
@@ -391,6 +403,7 @@ def fmt_number (nr, sign = None):
 	else:
 		if hasattr(nr, 'n'):
 			sf = sign if isinstance(sign, int) else sig_figures2(nr)
+
 			ac = str(sf_ac(to_precision(nr.n, sf, False)))
 			fmtNull = (r"{0:." + ac + r"f}").format(0.0)
 
@@ -496,11 +509,16 @@ def replace(s, r, fmt=False, texfile = "main.tex"):
 	else:
 		file = 'log/intermediate.tex'
 	# Read in the file
+
 	with open(file, 'r') as file :
 		filedata = file.read()
 
 	# Replace the target string
 	filedata = filedata.replace("[[" + s + "]]", format(r, fmt))
+
+	# create the log directory if it does not already exist
+	if not os.path.exists('log'):
+		os.makedirs('log')
 
 	# Write the file out again
 	with open('log/intermediate.tex', 'w') as file:
@@ -544,61 +562,67 @@ def cov_matrix (x, y, deg, **kwargs):
 
 # From http://randlet.com/blog/python-significant-figures-format/
 def to_precision(x, p, force=None):
-    """
-    returns a string representation of x formatted with a precision of p
+	"""
+	returns a string representation of x formatted with a precision of p
 
-    Based on the webkit javascript implementation taken from here:
-    https://code.google.com/p/webkit-mirror/source/browse/JavaScriptCore/kjs/number_object.cpp
-    """
+	Based on the webkit javascript implementation taken from here:
+	https://code.google.com/p/webkit-mirror/source/browse/JavaScriptCore/kjs/number_object.cpp
+	"""
 
-    x = float(x)
+	x = float(x)
+	out = []
 
-    if x == 0.:
-        return "0." + "0"*(p-1)
+	if p <= 0:
+		return 0
 
-    out = []
+	if x == 0.:
+		out.append("0")
+		if (p - 1 > 0):
+			out.append(".")
+			out.append("0"*(p - 1))
+		return "".join(out)
 
-    if x < 0:
-        out.append("-")
-        x = -x
+	if x < 0:
+		out.append("-")
+		x = -x
 
-    e = int(math.log10(x))
-    tens = math.pow(10, e - p + 1)
-    n = math.floor(x/tens)
+	e = int(math.log10(x))
+	tens = math.pow(10, e - p + 1)
+	n = math.floor(x/tens)
 
-    if n < math.pow(10, p - 1):
-        e = e -1
-        tens = math.pow(10, e - p+1)
-        n = math.floor(x / tens)
+	if n < math.pow(10, p - 1):
+		e = e - 1
+		tens = math.pow(10, e - p + 1)
+		n = math.floor(x / tens)
 
-    if abs((n + 1.) * tens - x) <= abs(n * tens -x):
-        n = n + 1
+	if abs((n + 1.) * tens - x) <= abs(n * tens - x):
+		n = n + 1
 
-    if n >= math.pow(10,p):
-        n = n / 10.
-        e = e + 1
+	if n >= math.pow(10,p):
+		n = n / 10.
+		e = e + 1
 
-    m = "%.*g" % (p, n)
+	m = "%.*g" % (p, n)
 
-    if (e < -2 or e >= p or force == True) and force != False:
-        out.append(m[0])
-        if p > 1:
-            out.append(".")
-            out.extend(m[1:p])
-        out.append('e')
-        if e > 0:
-            out.append("+")
-        out.append(str(e))
-    elif e == (p -1):
-        out.append(m)
-    elif e >= 0:
-        out.append(m[:e+1])
-        if e+1 < len(m):
-            out.append(".")
-            out.extend(m[e+1:])
-    else:
-        out.append("0.")
-        out.extend(["0"]*-(e+1))
-        out.append(m)
+	if (e < -2 or e >= p or force == True) and force != False:
+		out.append(m[0])
+		if p > 1:
+			out.append(".")
+			out.extend(m[1:p])
+		out.append('e')
+		if e > 0:
+			out.append("+")
+		out.append(str(e))
+	elif e == (p - 1):
+		out.append(m)
+	elif e >= 0:
+		out.append(m[:e + 1])
+		if e+1 < len(m):
+			out.append(".")
+			out.extend(m[e + 1:])
+	else:
+		out.append("0.")
+		out.extend(["0"]*-(e + 1))
+		out.append(m)
 
-    return "".join(out)
+	return "".join(out)
