@@ -41,14 +41,15 @@ class physical:
 	def __init__(self, n, s=None, sf=None, sfs=None, tag=None, sfpm=None):
 		if hasattr(n, 'n'):
 			self.d = n
-			self.sf = np.inf if s == None else int(s)
-			self.sfs = np.inf if sf == None else int(sf)
+			self.sf = np.inf if s == None else s
+			self.sfs = np.inf if sf == None else sf
 			self.tag = sfs
 			self.sfpm = tag if tag != None else self.significant_figures_after_comma(n.n)
 		else:
-			self.d = ufloat(n, 0 if s == None else s, tag)
-			self.sf = np.inf if sf == None else int(sf)
-			self.sfs = np.inf if sfs == None else int(sfs)
+			self.s = 0 if s == None else s
+			self.d = ufloat(n, self.s, tag)
+			self.sf = np.inf if sf == None else sf
+			self.sfs = np.inf if sfs == None else sfs
 			self.tag = tag
 			self.sfpm = sfpm if sfpm != None else self.significant_figures_after_comma(n)
 
@@ -188,6 +189,29 @@ class physical:
 			sfs = 0 #TODO
 
 		return physical(d, sf, sfs, None, sfpm)
+
+	#tan = lambda self: physical(unumpy.tan(self.d), self.sf, self.sfs, self.tag, self.sfpm)
+	#sin = lambda self: physical(unumpy.sin(self.d), self.sf, self.sfs, self.tag, self.sfpm)
+
+class pnumpy:
+	sin = lambda x: run_function(x, unumpy.sin)
+	cos = lambda x: run_function(x, unumpy.cos)
+	tan = lambda x: run_function(x, unumpy.tan)
+	arcsin = lambda x: run_function(x, unumpy.arcsin)
+	arccos = lambda x: run_function(x, unumpy.arccos)
+	arctan = lambda x: run_function(x, unumpy.arctan)
+
+def run_function(x, func):
+	if hasattr(x, "__len__"):
+		u = func(np.vectorize( lambda a: a.d if hasattr(a, "d") else a )(x))
+		return ( np.vectorize(
+			lambda a, b: physical(a.n, a.s, b.sf, b.sfs, b.tag, b.sfpm) if hasattr(a, "n") else a,
+			otypes=[object])
+			(u, x) )
+	else:
+		u = func(np.array([ x.d if hasattr(x, "d") else x ]))[0]
+		return physical(u.n, u.s, x.sf, x.sfs, x.tag, x.sfpm) if hasattr(u, "n") else u
+
 
 def pharray(nom, errs, sfs, sfss=None, tags=None, sfpms=None):
 	return (np.vectorize(
