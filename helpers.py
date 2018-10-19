@@ -362,24 +362,6 @@ def equal (A, B, tol):
 			return False
 	return True
 
-def compile (pdffile = "main", converter = "pdflatex"):
-	#call([converter, '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=None, stderr=None)
-	if not os.path.exists('log'):
-		os.makedirs('log')
-	p = Popen([converter, '-halt-on-error', '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=PIPE, stderr=PIPE)
-	output, err = p.communicate()
-	rc = p.returncode
-
-	if rc != 0:
-		print("Compilation of main.tex failed:")
-		print(output)
-	else:
-		os.system("evince main.pdf &")
-		#os.remove(pdffile + ".aux")
-		#os.rename(pdffile + ".aux", "log/" + pdffile + ".aux")
-		#os.rename(pdffile + ".log", "log/" + pdffile + ".log")
-
-
 
 '''
 Format a number (with its error if given) in latex
@@ -528,17 +510,14 @@ Replace an identifier in the tex document with the replace value
 first = True
 def replace(s, r, fmt=False, texfile = "main.tex"):
 	global first
-	if first:
-		file = texfile
-	else:
-		file = 'log/intermediate.tex'
-	# Read in the file
 
-	with open(file, 'r') as file :
+	file = texfile if first else 'log/intermediate.tex'
+
+	with open(file, 'rU') as file :
 		filedata = file.read()
 
 	# Replace the target string
-	filedata = filedata.replace("[[" + s + "]]", format(r, fmt))
+	filedata = filedata.replace(str("[[" + s + "]]"), format(r, fmt))
 
 	# create the log directory if it does not already exist
 	if not os.path.exists('log'):
@@ -549,6 +528,33 @@ def replace(s, r, fmt=False, texfile = "main.tex"):
 		file.write(filedata)
 
 	first = False
+
+def compile (pdffile = "main", converter = "pdflatex"):
+	#call([converter, '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=None, stderr=None)
+
+	# replacing all TODOs with yellow boxes
+	pattern = re.compile("\[\[(TODO[^\]]*)\]\]")
+	for i, line in enumerate(open('main.tex')):
+		for match in re.finditer(pattern, line):
+			replace(str(match.groups()[0]), todo(str(match.groups()[0])))
+
+	if not os.path.exists('log'):
+		os.makedirs('log')
+	p = Popen([converter, '-halt-on-error', '-jobname=' + pdffile, 'log/intermediate.tex'], stdin=None, stdout=PIPE, stderr=PIPE)
+	output, err = p.communicate()
+	rc = p.returncode
+
+	if rc != 0:
+		print("Compilation of main.tex failed:")
+		print(output)
+	else:
+		os.system("evince main.pdf &")
+		#os.remove(pdffile + ".aux")
+		#os.rename(pdffile + ".aux", "log/" + pdffile + ".aux")
+		#os.rename(pdffile + ".log", "log/" + pdffile + ".log")
+
+def todo(st):
+	return r'\colorbox{yellow!30}{' + str(st) + r'}'
 
 '''
 Wrapper for np.polyfit to cope with the ufloat datatype
