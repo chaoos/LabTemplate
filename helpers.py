@@ -96,6 +96,9 @@ class physical:
 	def __div__(self, operand):
 		return self.div(operand)
 
+	def __pow__(self, operand):
+		return self.pow(operand)
+
 	# basic operations from the right
 	def __radd__(self, operand):
 		return self.__add__(operand)
@@ -105,6 +108,8 @@ class physical:
 		return self.__mul__(operand)
 	def __rdiv__(self, operand):
 		return self.div(operand, False)
+	def __rpow__(self, operand):
+		return self.pow(operand, False)
 
 	def __abs__(self):
 		return abs(self.d)
@@ -190,8 +195,21 @@ class physical:
 
 		return physical(d, sf, sfs, None, sfpm)
 
-	#tan = lambda self: physical(unumpy.tan(self.d), self.sf, self.sfs, self.tag, self.sfpm)
-	#sin = lambda self: physical(unumpy.sin(self.d), self.sf, self.sfs, self.tag, self.sfpm)
+	def pow(self, operand, left = True):
+		if hasattr(operand, "__len__"):
+			return (np.vectorize( lambda a, b: a**b if left else b**a)(self, operand) )
+		elif hasattr(operand, 'd'):
+			d = self.d**operand.d if left else operand.d**self.d
+			sf = self.sf if self.sf <= operand.sf else operand.sf
+			sfpm = 0 if sf < len(str(int(d.n))) else sf - len(str(int(d.n)))
+			sfs = 0 #TODO
+		else:
+			d = self.d**operand if left else operand**self.d
+			sf = self.sf
+			sfpm = self.sfpm
+			sfs = 0 #TODO
+
+		return physical(d, sf, sfs, None, sfpm)
 
 class pnumpy:
 	sin = lambda x: run_function(x, unumpy.sin)
@@ -200,6 +218,8 @@ class pnumpy:
 	arcsin = lambda x: run_function(x, unumpy.arcsin)
 	arccos = lambda x: run_function(x, unumpy.arccos)
 	arctan = lambda x: run_function(x, unumpy.arctan)
+	log = lambda x: run_function(x, unumpy.log)
+	exp = lambda x: run_function(x, unumpy.exp)
 
 def run_function(x, func):
 	if hasattr(x, "__len__"):
@@ -272,7 +292,7 @@ def fetch (file, col, err = 0, sheet = "Sheet1"):
 		return res
 		#return unumpy.uarray(df[col], np.zeros(df[col].size) + err)
 
-def fetch2 (file, col, err = 0, sheet = "Sheet1"):
+def fetch2 (file, col, err = 0, sheet = 0):
 	ext = os.path.splitext(file)[1]
 	if ext == ".csv":
 		df = pd.read_csv(file)
@@ -282,7 +302,13 @@ def fetch2 (file, col, err = 0, sheet = "Sheet1"):
 	if not hasattr(err, "__len__") and err == 0:
 		return np.array(df[col]).astype(float)
 	else:
-		earr = np.zeros(df[col].size) + err
+		
+		if isinstance(err, str) and "%" in err:
+			rel_err = float(re.sub('[\%]', '', err))/100
+			earr = np.zeros(df[col].size) + rel_err*np.abs(np.array(df[col]).astype(float))
+		else:
+			earr = np.zeros(df[col].size) + err
+
 		sfarr = np.zeros(df[col].size).astype(int) + (np.vectorize(
 			lambda a: sf(a), otypes=[int])
 			(df[col]))
@@ -294,6 +320,12 @@ def fetch2 (file, col, err = 0, sheet = "Sheet1"):
 
 def parse (item):
 	return str(item)
+
+def addError (arr, err):
+	for i, el in enumerate(arr):
+		s = arr[i].s + err
+		arr[i] = physical(arr[i].n, s, arr[i].sf, arr[i].sfs, arr[i].tag, arr[i].sfpm)
+	return arr
 
 def nominal (a):
 	if hasattr(a, "__len__"):
@@ -476,7 +508,7 @@ Create latex equation for given polynomial coefficients
 @param {int} deg	- degree of the resulting latex function
 @return {string}	- the formatted latex equation
 '''
-def fitline(C, deg=None):
+def fmt_fit(C, deg=None, var='x'):
 	if (deg == None):
 		deg = len(C)-1
 
@@ -486,15 +518,16 @@ def fitline(C, deg=None):
 		if e > deg:
 			continue
 
+		a = c
 		if c != 0:
 			pf += " + " if (c > 0 and deg != e) else ""
 			pf += " - " if c < 0 else ""
-			pf += r"\left( " if (hasattr(c, 'n') and e != 0) else ""
-			pf += fmt_number(c) if c > 0 else ""
-			pf += fmt_number(-c) if c < 0 else ""
-			pf += r"\right) " if (hasattr(c, 'n') and e != 0) else ""
-			pf += r" x" if e == 1 else ""
-			pf += r" x^{" + str(e) +"}" if e > 1 else ""
+			coeff = fmt_number(c) if c > 0 else (fmt_number(-c) if c < 0 else "")
+			pf += r"\left( " if ( ( hasattr(c, 'n') or r'\times' in coeff ) and e != 0) else ""
+			pf += coeff
+			pf += r"\right) " if ( (hasattr(c, 'n') or r'\times' in coeff ) and e != 0) else ""
+			pf += r" " + str(var) if e == 1 else ""
+			pf += r" " + str(var) + r"^{" + str(e) +"}" if e > 1 else ""
 
 	return pf
 
@@ -572,9 +605,7 @@ def phpolyfit (x, y, deg, **kwargs):
 	
 	if True in np.isnan(np.sqrt(np.diagonal(cov))):
 		print("Something went wrong in calculating the stddev of the coeffs:")
-		print(x)
-		print(y)
-		print(cov)
+		print(x, y)
 		cov = cov_matrix(x, y, deg, **kwargs)
 
 	stderr = np.sqrt(np.diagonal(cov))
