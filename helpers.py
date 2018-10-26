@@ -165,7 +165,7 @@ class physical:
 	# subtraction and division are no cummutative
 	def sub(self, operand, left = True):
 		if hasattr(operand, "__len__"):
-			return ( np.vectorize( lambda a, b: a - b if left else b - a )(self, operand, left) )
+			return ( np.vectorize( lambda a, b, l: a - b if l else b - a )(self, operand, left) )
 		elif hasattr(operand, 'd'):
 			d = self.d - operand.d if left else operand.d - self.d
 			sfpm = self.sfpm if self.sfpm <= operand.sfpm else operand.sfpm
@@ -181,7 +181,7 @@ class physical:
 
 	def div(self, operand, left = True):
 		if hasattr(operand, "__len__"):
-			return ( np.vectorize( lambda a, b, r: a / b if left else b / a )(self, operand, left) )
+			return ( np.vectorize( lambda a, b, l: a / b if l else b / a )(self, operand, left) )
 		elif hasattr(operand, 'd'):
 			d = self.d / operand.d if left else operand.d / self.d
 			sf = self.sf if self.sf <= operand.sf else operand.sf
@@ -197,7 +197,7 @@ class physical:
 
 	def pow(self, operand, left = True):
 		if hasattr(operand, "__len__"):
-			return (np.vectorize( lambda a, b: a**b if left else b**a)(self, operand) )
+			return (np.vectorize( lambda a, b, l: a**b if l else b**a)(self, operand, left) )
 		elif hasattr(operand, 'd'):
 			d = self.d**operand.d if left else operand.d**self.d
 			sf = self.sf if self.sf <= operand.sf else operand.sf
@@ -220,6 +220,7 @@ class pnumpy:
 	arctan = lambda x: run_function(x, unumpy.arctan)
 	log = lambda x: run_function(x, unumpy.log)
 	exp = lambda x: run_function(x, unumpy.exp)
+	sqrt = lambda x: run_function(x, unumpy.sqrt)
 
 def run_function(x, func):
 	if hasattr(x, "__len__"):
@@ -421,6 +422,8 @@ def fmt_number (nr, sign = None):
 
 			if (nr.n == 10**exponent and sf == 1):
 				s = (r"10^{{{0}}} \pm {1}").format(exponent, fmt_number(nr.s, sf))
+			elif (nr.s == 0.0):
+				s = (r"{0} \times 10^{{{1}}}").format(base, exponent)
 			elif (r"{0:." + ac + r"f}").format(err) == fmtNull:
 				s = (r"{0} \times 10^{{{1}}} \pm {2}").format(base, exponent, fmt_number(nr.s, sf))
 			else:
@@ -459,6 +462,12 @@ def fmt_number (nr, sign = None):
 
 	return s
 
+
+def to_table(*args):
+	arr = []
+	for i, (heading, data) in enumerate(zip(args[::2], args[1::2])):
+		arr.append( np.concatenate((np.array([heading]), np.array(data, dtype=object) )) )
+	return np.array(arr).T
 
 '''
 Format a 2d-array to a latex table
@@ -678,6 +687,11 @@ def to_precision(x, p, force=None):
 		out.append(m)
 	elif e >= 0:
 		out.append(m[:e + 1])
+
+		nl = len(str(int(x))) - p
+		if (nl > 0):
+			out.extend(["0"]*nl)
+
 		if e+1 < len(m):
 			out.append(".")
 			out.extend(m[e + 1:])
